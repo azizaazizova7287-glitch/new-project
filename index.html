@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HERMÈS — Official Boutique</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        body { font-family: Georgia, serif; transition: 0.3s; }
+    </style>
+</head>
+<body class="bg-[#FAF8F5] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-h-screen flex flex-col justify-between">
+
+    <!-- TEPADAGI MENYU -->
+    <div>
+        <div class="bg-[#F37021] text-white text-xs text-center py-2 tracking-widest uppercase font-sans">
+            HERMÈS PARIS — OFFICIAL BOUTIQUE
+        </div>
+        <header class="sticky top-0 z-50 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800">
+            <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+                <button onclick="showSection('home')" class="text-2xl md:text-3xl tracking-[0.25em] font-bold">HERMÈS</button>
+                
+                <nav class="hidden md:flex space-x-8 text-sm uppercase tracking-wider font-sans">
+                    <button onclick="showSection('home')" class="hover:text-[#F37021]" id="nav-home">Bosh sahifa</button>
+                    <button onclick="showSection('catalog')" class="hover:text-[#F37021]" id="nav-catalog">Katalog</button>
+                    <button onclick="showSection('favorites')" class="hover:text-[#F37021]" id="nav-fav">Sevimlilar (<span id="fav-count">0</span>)</button>
+                    <button onclick="showSection('cart')" class="hover:text-[#F37021]" id="nav-cart">Savatcha (<span id="cart-count">0</span>)</button>
+                </nav>
+
+                <div class="flex items-center space-x-3 font-sans">
+                    <select onchange="changeLang(this.value)" class="bg-transparent border border-gray-400 rounded px-2 py-1 text-sm">
+                        <option value="uz" class="text-black">UZ</option>
+                        <option value="ru" class="text-black">RU</option>
+                        <option value="en" class="text-black">EN</option>
+                    </select>
+                    <button onclick="toggleTheme()" id="theme-btn" class="p-2 text-lg">🌙</button>
+                </div>
+            </div>
+            <!-- Mobil menyu -->
+            <div class="flex md:hidden justify-around py-2 border-t dark:border-zinc-800 text-xs uppercase font-sans">
+                <button onclick="showSection('home')">Home</button>
+                <button onclick="showSection('catalog')">Catalog</button>
+                <button onclick="showSection('favorites')">❤️ (<span id="fav-count-m">0</span>)</button>
+                <button onclick="showSection('cart')">🛍 (<span id="cart-count-m">0</span>)</button>
+            </div>
+        </header>
+    </div>
+
+    <!-- ASOSIY EKRAN -->
+    <main id="main-content" class="flex-1 max-w-7xl w-full mx-auto px-4 py-8"></main>
+
+    <!-- FOOTER -->
+    <footer class="bg-zinc-900 text-zinc-400 py-8 text-center text-xs font-sans mt-12">
+        <p class="text-white text-lg tracking-widest mb-2 font-serif">HERMÈS PARIS</p>
+        <p>© 2026 Hermès International. All rights reserved.</p>
+    </footer>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        const TELEGRAM_BOT_TOKEN = 'YOUR_BOT_TOKEN_HERE';
+        const TELEGRAM_CHAT_ID = 'YOUR_CHAT_ID_HERE';
+
+        const products = [
+            { id: 1, price: 12500, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600', name: { uz: "Birkin 30 Sumkasi", ru: "Сумка Birkin 30", en: "Birkin 30 Bag" } },
+            { id: 2, price: 10800, img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600', name: { uz: "Kelly 28 Sumkasi", ru: "Сумка Kelly 28", en: "Kelly 28 Bag" } },
+            { id: 3, price: 165, img: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=600', name: { uz: "Terre d'Hermès Atiri", ru: "Парфюм Terre d'Hermès", en: "Terre d'Hermès Parfum" } },
+            { id: 4, price: 3450, img: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=600', name: { uz: "Heure H Soati", ru: "Часы Heure H", en: "Heure H Watch" } },
+            { id: 5, price: 520, img: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=600', name: { uz: "Ipak Sharf", ru: "Шелковый платок", en: "Silk Scarf" } },
+            { id: 6, price: 760, img: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600', name: { uz: "Oran Shippaklari", ru: "Сандалии Oran", en: "Oran Sandals" } }
+        ];
+
+        const langText = {
+            uz: { home: "Bosh sahifa", catalog: "Katalog", fav: "Sevimlilar", cart: "Savatcha", search: "Qidirish...", add: "Savatchaga", buy: "Telegram orqali buyurtma", empty: "Hozircha bo'sh" },
+            ru: { home: "Главная", catalog: "Каталог", fav: "Избранное", cart: "Корзина", search: "Поиск...", add: "В корзину", buy: "Заказать через Telegram", empty: "Пока пусто" },
+            en: { home: "Home", catalog: "Catalog", fav: "Favorites", cart: "Cart", search: "Search...", add: "Add to Cart", buy: "Order via Telegram", empty: "Currently empty" }
+        };
+
+        let lang = 'uz';
+        let section = 'home';
+        let search = '';
+        let cart = [];
+        let favs = [];
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('theme-btn').innerText = isDark ? '☀️' : '🌙';
+        }
+
+        function changeLang(l) {
+            lang = l;
+            render();
+        }
+
+        function showSection(s) {
+            section = s;
+            render();
+        }
+
+        function toggleFav(id) {
+            favs.includes(id) ? favs = favs.filter(x => x !== id) : favs.push(id);
+            render();
+        }
+
+        function addCart(id) {
+            const item = cart.find(x => x.id === id);
+            item ? item.qty++ : cart.push({ id, qty: 1 });
+            render();
+        }
+
+        function cardHTML(p) {
+            const isFav = favs.includes(p.id);
+            return `
+            <div class="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 p-4 flex flex-col justify-between">
+                <div class="relative aspect-square mb-4 overflow-hidden bg-gray-100">
+                    <img src="${p.img}" class="w-full h-full object-cover">
+                    <button onclick="toggleFav(${p.id})" class="absolute top-2 right-2 bg-white/90 text-black w-8 h-8 rounded-full">${isFav ? '❤️' : '🤍'}</button>
+                </div>
+                <h3 class="text-lg font-bold mb-1">${p.name[lang]}</h3>
+                <div class="flex justify-between items-center mt-3 pt-3 border-t dark:border-zinc-800 font-sans">
+                    <span class="font-bold text-[#F37021]">$${p.price}</span>
+                    <button onclick="addCart(${p.id})" class="bg-zinc-900 dark:bg-white text-white dark:text-black text-xs px-3 py-2 uppercase">${langText[lang].add}</button>
+                </div>
+            </div>`;
+        }
+
+        function render() {
+            const t = langText[lang];
+            document.getElementById('nav-home').innerText = t.home;
+            document.getElementById('nav-catalog').innerText = t.catalog;
+            document.getElementById('fav-count').innerText = favs.length;
+            document.getElementById('fav-count-m').innerText = favs.length;
+            const totalCart = cart.reduce((a, b) => a + b.qty, 0);
+            document.getElementById('cart-count').innerText = totalCart;
+            document.getElementById('cart-count-m').innerText = totalCart;
+
+            const main = document.getElementById('main-content');
+
+            if (section === 'home') {
+                main.innerHTML = `
+                    <div class="bg-zinc-900 text-white p-12 text-center mb-10 rounded">
+                        <p class="text-[#F37021] tracking-widest text-xs mb-2 font-sans">PARIS — SINCE 1837</p>
+                        <h1 class="text-4xl md:text-5xl font-bold mb-6">HERMÈS EXCLUSIVE</h1>
+                        <button onclick="showSection('catalog')" class="bg-[#F37021] text-white px-6 py-3 text-xs uppercase tracking-widest font-sans">${t.catalog}</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        ${products.slice(0, 3).map(cardHTML).join('')}
+                    </div>`;
+            } else if (section === 'catalog') {
+                const filtered = products.filter(p => p.name[lang].toLowerCase().includes(search.toLowerCase()));
+                main.innerHTML = `
+                    <div class="mb-6 flex justify-between items-center">
+                        <h2 class="text-2xl font-bold">${t.catalog}</h2>
+                        <input type="text" oninput="search=this.value; render()" value="${search}" placeholder="${t.search}" class="border p-2 text-sm text-black rounded font-sans">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        ${filtered.map(cardHTML).join('')}
+                    </div>`;
+                const inp = main.querySelector('input');
+                if (inp && search) { inp.focus(); inp.setSelectionRange(search.length, search.length); }
+            } else if (section === 'favorites') {
+                const favList = products.filter(p => favs.includes(p.id));
+                main.innerHTML = `<h2 class="text-2xl font-bold mb-6">${t.fav}</h2>` + 
+                    (favList.length ? `<div class="grid grid-cols-1 sm:grid-cols-3 gap-6">${favList.map(cardHTML).join('')}</div>` : `<p>${t.empty}</p>`);
+            } else if (section === 'cart') {
+                if (!cart.length) { main.innerHTML = `<h2 class="text-2xl font-bold mb-4">${t.cart}</h2><p>${t.empty}</p>`; return; }
+                let total = 0;
+                const rows = cart.map(c => {
+                    const p = products.find(x => x.id === c.id);
+                    total += p.price * c.qty;
+                    return `<div class="flex justify-between border-b py-3 font-sans"><span>${p.name[lang]} (x${c.qty})</span><span class="font-bold">$${p.price * c.qty}</span></div>`;
+                }).join('');
+                main.innerHTML = `
+                    <h2 class="text-2xl font-bold mb-6">${t.cart}</h2>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>${rows}<div class="text-xl font-bold mt-4 text-[#F37021]">Total: $${total}</div></div>
+                        <form onsubmit="sendOrder(event, ${total})" class="space-y-4 font-sans bg-white dark:bg-zinc-900 p-6 border dark:border-zinc-800">
+                            <input id="c-name" required placeholder="Ismingiz / Name" class="w-full border p-2 text-black">
+                            <input id="c-phone" required placeholder="Telefon / Phone (+998...)" class="w-full border p-2 text-black">
+                            <input id="c-addr" required placeholder="Manzil / Address" class="w-full border p-2 text-black">
+                            <button class="w-full bg-[#F37021] text-white py-3 uppercase text-xs font-bold">${t.buy}</button>
+                        </form>
+                    </div>`;
+            }
+        }
+
+        async function sendOrder(e, total) {
+            e.preventDefault();
+            const name = document.getElementById('c-name').value;
+            const phone = document.getElementById('c-phone').value;
+            const addr = document.getElementById('c-addr').value;
+            let msg = `🛍 HERMÈS BUYURTMA:\n👤 Ism: ${name}\n📞 Tel: ${phone}\n📍 Manzil: ${addr}\n💰 Jami: $${total}`;
+            alert("✅ Buyurtma tayyor!\n\n" + msg);
+            cart = [];
+            render();
+        }
+
+        render();
+    </script>
+</body>
+</html>
